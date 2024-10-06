@@ -1,0 +1,5 @@
+let x = 2 + 5 + 8;
+
+let y = 8;
+
+return x;

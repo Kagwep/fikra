@@ -81,7 +81,10 @@ impl<'arena> Generator<'arena> {
 
             },
             ExprVar::VariantThree(n) => self.generate_binary_expression(&n.variant, asm, stack),
-        
+            ExprVar::VariantFour(node_expr_paren) => {
+                // For parenthesized expressions, we simply generate code for the inner expression
+                self.generate_expression(node_expr_paren.expr, asm, stack)
+            },
             _ => Err(GeneratorError::InvalidExpression),
         }
     }
@@ -110,9 +113,38 @@ impl<'arena> Generator<'arena> {
     
                 Ok(())
             },
-            // NodeBinExprVariant::VariantTwo(node_bin_expr_mul) => {
+            NodeBinExprVariant::VariantTwo(node_bin_expr_mul) => {
+                self.generate_expression(node_bin_expr_mul.lhs, asm, stack)?;
+                self.generate_expression(node_bin_expr_mul.rhs, asm, stack)?;
+    
+                asm.add_instruction(&stack.pop("rax"));
+                asm.add_instruction(&stack.pop("rbx"));
+                asm.add_instruction("mul rbx");
+                asm.add_instruction(&stack.push("rax"));
 
-            // },
+                Ok(())
+            },
+            NodeBinExprVariant::VariantThree(node_bin_expr_sub) => {
+                self.generate_expression(node_bin_expr_sub.lhs, asm, stack)?;
+                self.generate_expression(node_bin_expr_sub.rhs, asm, stack)?;
+                
+                asm.add_instruction(&stack.pop("rbx")); // Pop the right operand into rbx
+                asm.add_instruction(&stack.pop("rax")); // Pop the left operand into rax
+                asm.add_instruction("sub rax, rbx");    // Subtract rbx from rax
+                asm.add_instruction(&stack.push("rax")); // Push the result back onto the stack
+                Ok(())
+            },
+            NodeBinExprVariant::VariantFour(node_bin_expr_div) => {
+                self.generate_expression(node_bin_expr_div.lhs, asm, stack)?;
+                self.generate_expression(node_bin_expr_div.rhs, asm, stack)?;
+    
+                asm.add_instruction(&stack.pop("rbx"));
+                asm.add_instruction(&stack.pop("rax"));
+                asm.add_instruction("div rbx");
+                asm.add_instruction(&stack.push("rax"));
+
+                Ok(())
+            },
             _ => Err(GeneratorError::InvalidExpression)
         }
     }

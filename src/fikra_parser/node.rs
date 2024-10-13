@@ -5,6 +5,7 @@ pub struct AstArena<'arena> {
     pub expr_arena: Arena<NodeExpr<'arena>>,
     pub stmt_arena: Arena<NodeStmt<'arena>>,
     pub bin_expr_arena: Arena<NodeBinExpr<'arena>>,
+    pub paren_expr_arena: Arena<NodeExprParen<'arena>>,
 }
 
 pub struct NodeExprIntLit {
@@ -15,10 +16,15 @@ pub struct NodeExprIdent {
    pub ident: Token,
 }
 
+pub struct NodeExprParen<'arena> {
+    pub expr: &'arena NodeExpr<'arena>,
+}
+
 pub enum ExprVar<'arena> {
     VariantOne(NodeExprIntLit),
     VariantTwo(NodeExprIdent),
     VariantThree(&'arena NodeBinExpr<'arena>),
+    VariantFour(&'arena NodeExprParen<'arena>)
 }
 
 pub struct NodeStmtReturn<'arena> {
@@ -37,7 +43,9 @@ pub enum StmtVariant<'arena> {
 
 pub enum NodeBinExprVariant<'arena> {
     VariantOne(NodeBinExprAdd<'arena>),
-    VariantTwo(NodeBinExprMul<'arena>)
+    VariantTwo(NodeBinExprMul<'arena>),
+    VariantThree(NodeBinExprSub<'arena>),
+    VariantFour(NodeBinExprDiv<'arena>)
 }
 
 pub struct NodeBinExprAdd<'arena> {
@@ -46,6 +54,17 @@ pub struct NodeBinExprAdd<'arena> {
 }
 
 pub struct NodeBinExprMul<'arena> {
+    pub lhs: &'arena NodeExpr<'arena>,
+    pub rhs: &'arena NodeExpr<'arena>
+}
+
+
+pub struct NodeBinExprSub<'arena> {
+    pub lhs: &'arena NodeExpr<'arena>,
+    pub rhs: &'arena NodeExpr<'arena>
+}
+
+pub struct NodeBinExprDiv<'arena> {
     pub lhs: &'arena NodeExpr<'arena>,
     pub rhs: &'arena NodeExpr<'arena>
 }
@@ -72,6 +91,7 @@ impl<'arena> AstArena<'arena> {
             expr_arena: Arena::new(),
             stmt_arena: Arena::new(),
             bin_expr_arena: Arena::new(),
+            paren_expr_arena: Arena::new(),
         }
     }
 

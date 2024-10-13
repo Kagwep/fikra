@@ -1,5 +1,5 @@
 use crate::fikra_entities::{Precedence, Token, TokenType};
-use super::node::{ AstArena, ExprVar, NodeBinExpr, NodeBinExprAdd, NodeBinExprMul, NodeBinExprVariant, NodeExpr, NodeExprIdent, NodeExprIntLit, NodeProg, NodeStmt, NodeStmtLet, NodeStmtReturn, StmtVariant};
+use super::node::{ AstArena, ExprVar, NodeBinExpr, NodeBinExprAdd,NodeExprParen, NodeBinExprDiv, NodeBinExprMul, NodeBinExprSub, NodeBinExprVariant, NodeExpr, NodeExprIdent, NodeExprIntLit, NodeProg, NodeStmt, NodeStmtLet, NodeStmtReturn, StmtVariant};
 use crate::fikra_errors::{ParseError};
 
 pub struct Parser<'a, 'arena> {
@@ -51,6 +51,22 @@ impl<'a, 'arena> Parser<'a, 'arena> {
                         variant: ExprVar::VariantTwo(NodeExprIdent { ident: token.clone() })
                     }
                 },
+                TokenType::OpenParen =>{
+                    parse_tokens.next();
+                    let inner_expr = self.parse_expr(parse_tokens)?;
+                    if let Some(close_paren) = parse_tokens.next() {
+                        if close_paren._type != TokenType::CloseParen {
+                            return None; // Mismatched parentheses
+                        }
+                    }else{
+                        return None; // Missing closing parenthesis
+                    }
+                    let paren_expr = NodeExprParen{expr: inner_expr};
+                    let paren_expr_ref = self.ast_arena.paren_expr_arena.alloc(paren_expr);
+                    NodeExpr {
+                        variant: ExprVar::VariantFour(paren_expr_ref)
+                    }
+                }
                 _ =>{
                     
                     return  None
@@ -65,7 +81,7 @@ impl<'a, 'arena> Parser<'a, 'arena> {
     }
 
     fn parse_expr_with_precedence(&self, parse_tokens: &mut std::iter::Peekable<std::slice::Iter<'a, Token>>, min_precedence: Precedence) -> Option<&'arena NodeExpr<'arena>> {
-        let mut left = self.parse_primary(parse_tokens)?;
+        let mut left: &NodeExpr<'arena> = self.parse_primary(parse_tokens)?;
         
         while let Some(&token) = parse_tokens.peek() {
             
@@ -97,6 +113,12 @@ impl<'a, 'arena> Parser<'a, 'arena> {
             },
             TokenType::Star => NodeBinExpr {
                 variant: NodeBinExprVariant::VariantTwo(NodeBinExprMul { lhs: left, rhs: right })
+            },
+            TokenType::Minus => NodeBinExpr{
+                variant:NodeBinExprVariant::VariantThree(NodeBinExprSub{lhs: left, rhs: right})
+            },
+            TokenType::Slash => NodeBinExpr{
+                variant: NodeBinExprVariant::VariantFour(NodeBinExprDiv{lhs: left, rhs: right})
             },
             // Add other binary operators here...
             _ => return Some(left), // Not a binary operator, return left as is

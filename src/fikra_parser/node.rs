@@ -36,9 +36,14 @@ pub struct NodeStmtLet<'arena> {
     pub expr: &'arena NodeExpr<'arena>,
 }
 
+pub struct  NodeStmtScope<'arena>{
+    pub statements: Vec<&'arena NodeStmt<'arena>>
+}
+
 pub enum StmtVariant<'arena> {
     VariantOne(NodeStmtReturn<'arena>),
-    VariantTwo(NodeStmtLet<'arena>)  
+    VariantTwo(NodeStmtLet<'arena>),  
+    VariantThree(NodeStmtScope<'arena>)
 }
 
 pub enum NodeBinExprVariant<'arena> {

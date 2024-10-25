@@ -9,7 +9,9 @@ $$
 \begin{cases}
 
 \text{return} [\text{Expr}]; \\ 
-\text{let}\space\text{ident} = [\text{Expr}]
+\text{let}\space\text{ident} = [\text{Expr}];\\
+
+\{[\text{Stmt}]^*\}
 
 \end{cases}
 

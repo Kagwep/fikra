@@ -61,6 +61,8 @@ pub mod tokens {
                 '/' => Token { _type: TokenType::Slash, value: None, line, column },
                 '-' => Token { _type: TokenType::Minus, value: None, line, column },
                 ';' => Token { _type: TokenType::Semi, value: None, line, column },
+                '{' => Token { _type: TokenType::OpenBrace, value: None, line, column },
+                '}' => Token { _type: TokenType::CloseBrace, value: None, line, column },
                 _ => {
                     eprintln!("Unexpected character: {} at line {}, column {}", c, line, column);
                     column += 1;

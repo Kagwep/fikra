@@ -51,7 +51,7 @@ impl<'a, 'arena> Parser<'a, 'arena> {
                         variant: ExprVar::VariantTwo(NodeExprIdent { ident: token.clone() })
                     }
                 },
-                TokenType::OpenParen =>{
+                TokenType::OpenParen =>{ 
                     parse_tokens.next();
                     let inner_expr = self.parse_expr(parse_tokens)?;
                     if let Some(close_paren) = parse_tokens.next() {

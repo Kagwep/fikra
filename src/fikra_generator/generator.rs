@@ -56,6 +56,16 @@ impl<'arena> Generator<'arena> {
                 }
                
             },
+            StmtVariant::VariantThree(stmt) =>{
+
+                  stack.begin_scope();
+                   for stm in stmt.statements.iter(){
+
+                   }
+                   stack.end_scope(asm);
+
+                Ok(())
+            },
             _ => Err(GeneratorError::InvalidStatement),
         }
     }
@@ -147,6 +157,8 @@ impl<'arena> Generator<'arena> {
             },
             _ => Err(GeneratorError::InvalidExpression)
         }
+
+
     }
 
 }
@@ -184,12 +196,13 @@ struct Var{
 }
 struct Stack {
     index: u128,
-    map_variables: HashMap<String, Var>
+    map_variables: HashMap<String, Var>,
+    scope_boundaries: Vec<u128>,
 }
 
 impl Stack {
     fn new() -> Self {
-        Stack { index: 0, map_variables: HashMap::new() }
+        Stack { index: 0, map_variables: HashMap::new() ,scope_boundaries: Vec::new(),}
     }
 
     fn push(&mut self, reg: &str) -> String {
@@ -205,4 +218,25 @@ impl Stack {
     fn current_size(&self) -> u128 {
         self.index
     }
+
+    fn begin_scope(&mut self){
+        self.scope_boundaries.push(self.index);
+    }
+
+    fn end_scope(&mut self, asm: &mut AsmBuilder) {
+        if let Some(scope_start) = self.scope_boundaries.pop() {
+            let variables_to_pop = self.index - scope_start;
+            
+            // Remove variables from current scope
+            self.map_variables.retain(|_, var| var.stack_loc < scope_start);
+            
+            // Generate pop instruction if needed
+            if variables_to_pop > 0 {
+                asm.add_instruction(&format!("add rsp, {}", variables_to_pop * 8));
+            }
+            
+            self.index = scope_start;
+        }
+    }
+
 }

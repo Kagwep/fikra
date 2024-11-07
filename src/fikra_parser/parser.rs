@@ -1,5 +1,7 @@
+use std::thread::Scope;
+
 use crate::fikra_entities::{Precedence, Token, TokenType};
-use super::node::{ AstArena, ExprVar, NodeBinExpr, NodeBinExprAdd,NodeExprParen, NodeBinExprDiv, NodeBinExprMul, NodeBinExprSub, NodeBinExprVariant, NodeExpr, NodeExprIdent, NodeExprIntLit, NodeProg, NodeStmt, NodeStmtLet, NodeStmtReturn, StmtVariant};
+use super::node::{ AstArena, ExprVar,NodeStmtScope, NodeBinExpr, NodeBinExprAdd,NodeExprParen, NodeBinExprDiv, NodeBinExprMul, NodeBinExprSub, NodeBinExprVariant, NodeExpr, NodeExprIdent, NodeExprIntLit, NodeProg, NodeStmt, NodeStmtLet, NodeStmtReturn, StmtVariant};
 use crate::fikra_errors::{ParseError};
 
 pub struct Parser<'a, 'arena> {
@@ -180,6 +182,34 @@ impl<'a, 'arena> Parser<'a, 'arena> {
                     Some(self.ast_arena.stmt_arena.alloc(NodeStmt {
                         variant: StmtVariant::VariantTwo(let_stmt)
                     }))
+                },
+
+                // Suggested Improved Implementation
+                TokenType::OpenBrace => {
+                    parse_tokens.next(); // Consume the OpenBrace token
+                    let mut scope_statements: Vec<&'arena NodeStmt<'arena>> = Vec::new();
+                    
+                    while let Some(token) = parse_tokens.peek() {
+                        if token._type == TokenType::CloseBrace {
+                            break;
+                        }
+                        match self.parse_stmt(parse_tokens) {
+                            Some(stmt) => scope_statements.push(stmt),
+                            None => return None // Early return on parsing error
+                        }
+                    }
+                    
+                    match parse_tokens.next() {
+                        Some(token) if token._type == TokenType::CloseBrace => {
+                            let node_scope_stmts = NodeStmtScope {
+                                statements: scope_statements
+                            };
+                            Some(self.ast_arena.stmt_arena.alloc(NodeStmt {
+                                variant: StmtVariant::VariantThree(node_scope_stmts)
+                            }))
+                        },
+                        _ => None
+                    }
                 },
                 _ => None
             }

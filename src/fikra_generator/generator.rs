@@ -60,7 +60,7 @@ impl<'arena> Generator<'arena> {
 
                   stack.begin_scope();
                    for stm in stmt.statements.iter(){
-
+                        self.generate_statement(stm, asm, stack)?;
                    }
                    stack.end_scope(asm);
 
